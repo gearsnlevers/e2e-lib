@@ -1,2 +1,7 @@
 # e2e-lib
-Sandbox library for the Issue Concierge end-to-end tests. Issues here are test data, opened and closed by the test runner.
+
+A sandbox library for the Repo Concierge end-to-end tests. It is not a product and nothing here is released.
+
+It holds two small functions, `flattenTree` and `listWidgets`, and a command line app in [gearsnlevers/e2e-app](https://github.com/gearsnlevers/e2e-app) calls them. The pair mirrors a project split into a library and a command line tool, so that the Concierge's routing between two repositories can be tested.
+
+Issues here are test data. The test runner opens and closes them, and a pull request is never merged for them. This repository is seeded from `tools/e2e/sandbox/` of the Repo Concierge, and a reseed overwrites every file in it.
