@@ -5,19 +5,23 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Signal token
+      - name: Header names, signal token
         env:
           GH_TOKEN: ${{ secrets.SIGNAL_TOKEN }}
         run: |
-          for ep in rate_limit user "repos/${{ github.repository }}"; do
-            echo "== SIGNAL_TOKEN $ep"
-            gh api -i "$ep" 2>&1 | grep -i -E '^(HTTP/|github-authentication-token-expiration|x-oauth-scopes|x-accepted-github-permissions)' || true
-          done
-      - name: Concierge token (control)
+          echo "== names, SIGNAL_TOKEN, user"
+          gh api -i user 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
+          echo "== names, SIGNAL_TOKEN, rate_limit"
+          gh api -i rate_limit 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
+      - name: Header names, concierge token
         env:
           GH_TOKEN: ${{ secrets.CONCIERGE_TOKEN }}
         run: |
-          for ep in rate_limit "repos/${{ github.repository }}"; do
-            echo "== CONCIERGE_TOKEN $ep"
-            gh api -i "$ep" 2>&1 | grep -i -E '^(HTTP/|github-authentication-token-expiration|x-oauth-scopes|x-accepted-github-permissions)' || true
-          done
+          echo "== names, CONCIERGE_TOKEN, user"
+          gh api -i user 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
+      - name: Header names, the job's own token
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "== names, GITHUB_TOKEN, rate_limit"
+          gh api -i rate_limit 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
