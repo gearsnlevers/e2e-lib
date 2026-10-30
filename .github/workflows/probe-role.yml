@@ -1,0 +1,21 @@
+name: probe-role
+on: pull_request
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  actions: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the permission API with the workflow token
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for login in vscheuber volker-bornagainpatriots octocat; do
+            code=$(gh api -i "repos/${{ github.repository }}/collaborators/$login/permission" 2>&1 | head -1)
+            body=$(gh api "repos/${{ github.repository }}/collaborators/$login/permission" -q '[.role_name,.permission]|join(",")' 2>&1 | head -c 200)
+            echo "PROBE $login :: $code :: $body"
+          done
+          echo "PROBE list :: $(gh api "repos/${{ github.repository }}/collaborators?per_page=5" -q 'length' 2>&1 | head -c 200)"
