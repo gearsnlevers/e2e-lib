@@ -5,23 +5,17 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Header names, signal token
+      - name: Header names
         env:
-          GH_TOKEN: ${{ secrets.SIGNAL_TOKEN }}
+          SIGNAL: ${{ secrets.SIGNAL_TOKEN }}
+          CONCIERGE: ${{ secrets.CONCIERGE_TOKEN }}
+          JOB: ${{ github.token }}
         run: |
-          echo "== names, SIGNAL_TOKEN, user"
-          gh api -i user 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
-          echo "== names, SIGNAL_TOKEN, rate_limit"
-          gh api -i rate_limit 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
-      - name: Header names, concierge token
-        env:
-          GH_TOKEN: ${{ secrets.CONCIERGE_TOKEN }}
-        run: |
-          echo "== names, CONCIERGE_TOKEN, user"
-          gh api -i user 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
-      - name: Header names, the job's own token
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          echo "== names, GITHUB_TOKEN, rate_limit"
-          gh api -i rate_limit 2>&1 | sed '/^\r\{0,1\}$/q' | cut -d: -f1 | sort | tr '\n' ' '; echo
+          for who in SIGNAL CONCIERGE JOB; do
+            for ep in user rate_limit; do
+              eval "tok=\$$who"
+              GH_TOKEN="$tok" gh api -i "$ep" > /tmp/h.txt 2>&1 || true
+              echo "NAMES $who $ep: $(awk '/^\r?$/ {exit} {print}' /tmp/h.txt | cut -d: -f1 | tr -d '\r' | sort -u | tr '\n' ' ')"
+              echo "EXPIRY $who $ep: $(awk '/^\r?$/ {exit} {print}' /tmp/h.txt | grep -i -E '^github-authentication-token-expiration' | tr -d '\r' || echo none)"
+            done
+          done
