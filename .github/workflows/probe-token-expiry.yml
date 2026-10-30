@@ -1,0 +1,23 @@
+name: probe-token-expiry
+on: pull_request
+permissions: {}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Signal token
+        env:
+          GH_TOKEN: ${{ secrets.SIGNAL_TOKEN }}
+        run: |
+          for ep in rate_limit user "repos/${{ github.repository }}"; do
+            echo "== SIGNAL_TOKEN $ep"
+            gh api -i "$ep" 2>&1 | grep -i -E '^(HTTP/|github-authentication-token-expiration|x-oauth-scopes|x-accepted-github-permissions)' || true
+          done
+      - name: Concierge token (control)
+        env:
+          GH_TOKEN: ${{ secrets.CONCIERGE_TOKEN }}
+        run: |
+          for ep in rate_limit "repos/${{ github.repository }}"; do
+            echo "== CONCIERGE_TOKEN $ep"
+            gh api -i "$ep" 2>&1 | grep -i -E '^(HTTP/|github-authentication-token-expiration|x-oauth-scopes|x-accepted-github-permissions)' || true
+          done
